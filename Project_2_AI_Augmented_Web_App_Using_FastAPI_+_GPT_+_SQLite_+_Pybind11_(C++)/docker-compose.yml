@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  ai-text-analyzer:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./analyzer.db:/app/analyzer.db
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-demo-key}
+    restart: unless-stopped

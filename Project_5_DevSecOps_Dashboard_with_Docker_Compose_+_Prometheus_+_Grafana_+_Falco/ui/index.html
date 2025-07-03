@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevSecOps Dashboard</title>
+    <link rel="stylesheet" href="/ui/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>DevSecOps Dashboard</h1>
+                </div>
+                <div class="header-controls">
+                    <div class="status-indicator" id="connectionStatus">
+                        <i class="fas fa-circle"></i>
+                        <span>Connected</span>
+                    </div>
+                    <button class="refresh-btn" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="dashboard-nav">
+            <div class="nav-content">
+                <button class="nav-item active" data-section="overview">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Overview
+                </button>
+                <button class="nav-item" data-section="security">
+                    <i class="fas fa-shield-alt"></i>
+                    Security
+                </button>
+                <button class="nav-item" data-section="monitoring">
+                    <i class="fas fa-chart-line"></i>
+                    Monitoring
+                </button>
+                <button class="nav-item" data-section="services">
+                    <i class="fas fa-server"></i>
+                    Services
+                </button>
+                <button class="nav-item" data-section="attacks">
+                    <i class="fas fa-bug"></i>
+                    Attack Sim
+                </button>
+                <button class="nav-item" data-section="logs">
+                    <i class="fas fa-file-alt"></i>
+                    Logs
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Overview Section -->
+            <section id="overview" class="dashboard-section active">
+                <div class="section-header">
+                    <h2>System Overview</h2>
+                    <div class="last-updated">
+                        Last updated: <span id="lastUpdated">--</span>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>System Health</h3>
+                            <div class="metric-value" id="systemHealth">--</div>
+                            <div class="metric-trend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>All systems operational</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Security Alerts</h3>
+                            <div class="metric-value" id="securityAlerts">--</div>
+                            <div class="metric-trend">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>Last 24h</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Active Connections</h3>
+                            <div class="metric-value" id="activeConnections">--</div>
+                            <div class="metric-trend">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>Current</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Response Time</h3>
+                            <div class="metric-value" id="responseTime">--</div>
+                            <div class="metric-trend">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>Average</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn primary" onclick="openGrafana()">
+                            <i class="fas fa-chart-bar"></i>
+                            Open Grafana
+                        </button>
+                        <button class="action-btn secondary" onclick="openPrometheus()">
+                            <i class="fas fa-fire"></i>
+                            Open Prometheus
+                        </button>
+                        <button class="action-btn warning" onclick="runHealthCheck()">
+                            <i class="fas fa-stethoscope"></i>
+                            Health Check
+                        </button>
+                        <button class="action-btn danger" onclick="simulateAttack(this)">
+                            <i class="fas fa-bug"></i>
+                            Simulate Attack
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Service Status Grid -->
+                <div class="service-status-grid">
+                    <h3>Service Status</h3>
+                    <div class="services-grid">
+                        <div class="service-card" id="service-app">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>Demo App</h4>
+                                <p>Port 3000</p>
+                            </div>
+                        </div>
+                        <div class="service-card" id="service-prometheus">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>Prometheus</h4>
+                                <p>Port 9090</p>
+                            </div>
+                        </div>
+                        <div class="service-card" id="service-grafana">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>Grafana</h4>
+                                <p>Port 3001</p>
+                            </div>
+                        </div>
+                        <div class="service-card" id="service-cadvisor">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>cAdvisor</h4>
+                                <p>Port 8080</p>
+                            </div>
+                        </div>
+                        <div class="service-card" id="service-node-exporter">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>Node Exporter</h4>
+                                <p>Port 9100</p>
+                            </div>
+                        </div>
+                        <div class="service-card" id="service-redis">
+                            <div class="service-status"></div>
+                            <div class="service-info">
+                                <h4>Redis</h4>
+                                <p>Port 6379</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Section -->
+            <section id="security" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Security Monitoring</h2>
+                    <button class="btn-secondary" onclick="refreshSecurity()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="security-grid">
+                    <!-- Security Status -->
+                    <div class="security-card">
+                        <h3>Security Status</h3>
+                        <div class="security-status" id="securityStatus">
+                            <div class="status-item">
+                                <span class="status-label">Monitoring:</span>
+                                <span class="status-value active">Active</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Falco:</span>
+                                <span class="status-value" id="falcoStatus">--</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Last Scan:</span>
+                                <span class="status-value" id="lastScan">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threat Detection -->
+                    <div class="security-card">
+                        <h3>Threat Detection</h3>
+                        <div class="threat-metrics">
+                            <div class="threat-item">
+                                <span class="threat-type">SQL Injection</span>
+                                <span class="threat-count" id="sqlInjectionCount">0</span>
+                            </div>
+                            <div class="threat-item">
+                                <span class="threat-type">Privilege Escalation</span>
+                                <span class="threat-count" id="privilegeEscalationCount">0</span>
+                            </div>
+                            <div class="threat-item">
+                                <span class="threat-type">File Access</span>
+                                <span class="threat-count" id="fileAccessCount">0</span>
+                            </div>
+                            <div class="threat-item">
+                                <span class="threat-type">Network Scan</span>
+                                <span class="threat-count" id="networkScanCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Alerts -->
+                    <div class="security-card full-width">
+                        <h3>Recent Security Events</h3>
+                        <div class="alerts-list" id="securityAlertsList">
+                            <div class="alert-item">
+                                <div class="alert-time">--:--:--</div>
+                                <div class="alert-message">No recent security events</div>
+                                <div class="alert-severity low">Info</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Monitoring Section -->
+            <section id="monitoring" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Monitoring & Metrics</h2>
+                    <div class="monitoring-controls">
+                        <select id="timeRange" class="time-selector">
+                            <option value="5m">Last 5 minutes</option>
+                            <option value="15m">Last 15 minutes</option>
+                            <option value="1h" selected>Last hour</option>
+                            <option value="6h">Last 6 hours</option>
+                            <option value="24h">Last 24 hours</option>
+                        </select>
+                        <button class="btn-secondary" onclick="refreshMonitoring()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="monitoring-grid">
+                    <!-- Embedded Grafana Dashboard -->
+                    <div class="monitoring-card full-width">
+                        <h3>Grafana Dashboard</h3>
+                        <div class="grafana-embed">
+                            <iframe
+                                src="http://localhost:3001/d-solo/devsecops/devsecops-monitoring-dashboard?orgId=1&refresh=30s&theme=light"
+                                width="100%"
+                                height="400"
+                                frameborder="0">
+                            </iframe>
+                        </div>
+                        <div class="embed-actions">
+                            <button class="action-btn primary" onclick="openGrafana()">
+                                <i class="fas fa-external-link-alt"></i>
+                                Open Full Dashboard
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Prometheus Metrics -->
+                    <div class="monitoring-card">
+                        <h3>Prometheus Targets</h3>
+                        <div class="targets-list" id="prometheusTargets">
+                            <div class="target-item">
+                                <span class="target-name">demo-app</span>
+                                <span class="target-status healthy">UP</span>
+                            </div>
+                            <div class="target-item">
+                                <span class="target-name">node-exporter</span>
+                                <span class="target-status healthy">UP</span>
+                            </div>
+                            <div class="target-item">
+                                <span class="target-name">cadvisor</span>
+                                <span class="target-status healthy">UP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Metrics -->
+                    <div class="monitoring-card">
+                        <h3>System Resources</h3>
+                        <div class="resource-metrics">
+                            <div class="resource-item">
+                                <span class="resource-label">CPU Usage</span>
+                                <div class="resource-bar">
+                                    <div class="resource-fill" style="width: 35%"></div>
+                                </div>
+                                <span class="resource-value">35%</span>
+                            </div>
+                            <div class="resource-item">
+                                <span class="resource-label">Memory</span>
+                                <div class="resource-bar">
+                                    <div class="resource-fill" style="width: 60%"></div>
+                                </div>
+                                <span class="resource-value">60%</span>
+                            </div>
+                            <div class="resource-item">
+                                <span class="resource-label">Disk I/O</span>
+                                <div class="resource-bar">
+                                    <div class="resource-fill" style="width: 25%"></div>
+                                </div>
+                                <span class="resource-value">25%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services Section -->
+            <section id="services" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Service Management</h2>
+                    <button class="btn-secondary" onclick="refreshServices()">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="services-management">
+                    <!-- Service Control Panel -->
+                    <div class="service-control-panel">
+                        <h3>Service Controls</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn start" onclick="startAllServices(this)">
+                                <i class="fas fa-play"></i>
+                                Start All
+                            </button>
+                            <button class="control-btn stop" onclick="stopAllServices(this)">
+                                <i class="fas fa-stop"></i>
+                                Stop All
+                            </button>
+                            <button class="control-btn restart" onclick="restartAllServices(this)">
+                                <i class="fas fa-redo"></i>
+                                Restart All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Service Status -->
+                    <div class="detailed-services">
+                        <h3>Service Details</h3>
+                        <div class="service-table">
+                            <div class="service-row header">
+                                <span>Service</span>
+                                <span>Status</span>
+                                <span>Port</span>
+                                <span>Uptime</span>
+                                <span>Actions</span>
+                            </div>
+                            <div class="service-row" id="service-row-app">
+                                <span class="service-name">Demo Application</span>
+                                <span class="service-status-badge healthy">Running</span>
+                                <span class="service-port">3000</span>
+                                <span class="service-uptime">--</span>
+                                <div class="service-actions">
+                                    <button class="action-btn-small" onclick="viewServiceLogs('app')">
+                                        <i class="fas fa-file-alt"></i>
+                                    </button>
+                                    <button class="action-btn-small" onclick="restartService('app')">
+                                        <i class="fas fa-redo"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- More service rows would be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Attack Simulation Section -->
+            <section id="attacks" class="dashboard-section">
+                <div class="section-header">
+                    <h2>Attack Simulation</h2>
+                    <div class="attack-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Use only in testing environments</span>
+                    </div>
+                </div>
+
+                <div class="attack-simulation">
+                    <!-- Attack Types -->
+                    <div class="attack-types">
+                        <h3>Available Attack Simulations</h3>
+                        <div class="attack-grid">
+                            <div class="attack-card" data-attack="sql_injection">
+                                <div class="attack-icon">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <h4>SQL Injection</h4>
+                                <p>Simulate SQL injection attempts</p>
+                                <button class="attack-btn" onclick="runAttackSimulation('sql_injection')">
+                                    <i class="fas fa-play"></i>
+                                    Simulate
+                                </button>
+                            </div>
+                            <div class="attack-card" data-attack="privilege_escalation">
+                                <div class="attack-icon">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <h4>Privilege Escalation</h4>
+                                <p>Test privilege escalation detection</p>
+                                <button class="attack-btn" onclick="runAttackSimulation('privilege_escalation')">
+                                    <i class="fas fa-play"></i>
+                                    Simulate
+                                </button>
+                            </div>
+                            <div class="attack-card" data-attack="file_access">
+                                <div class="attack-icon">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <h4>Unauthorized File Access</h4>
+                                <p>Simulate suspicious file operations</p>
+                                <button class="attack-btn" onclick="runAttackSimulation('file_access')">
+                                    <i class="fas fa-play"></i>
+                                    Simulate
+                                </button>
+                            </div>
+                            <div class="attack-card" data-attack="network_scan">
+                                <div class="attack-icon">
+                                    <i class="fas fa-network-wired"></i>
+                                </div>
+                                <h4>Network Scanning</h4>
+                                <p>Simulate network reconnaissance</p>
+                                <button class="attack-btn" onclick="runAttackSimulation('network_scan')">
+                                    <i class="fas fa-play"></i>
+                                    Simulate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attack Results -->
+                    <div class="attack-results">
+                        <h3>Simulation Results</h3>
+                        <div class="results-log" id="attackResults">
+                            <div class="log-entry">
+                                <span class="log-time">--:--:--</span>
+                                <span class="log-message">No simulations run yet</span>
+                                <span class="log-status info">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section id="logs" class="dashboard-section">
+                <div class="section-header">
+                    <h2>System Logs</h2>
+                    <div class="log-controls">
+                        <select id="logLevel" class="log-selector">
+                            <option value="all">All Levels</option>
+                            <option value="error">Error</option>
+                            <option value="warning">Warning</option>
+                            <option value="info">Info</option>
+                            <option value="debug">Debug</option>
+                        </select>
+                        <button class="btn-secondary" onclick="refreshLogs()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="btn-secondary" onclick="clearLogs()">
+                            <i class="fas fa-trash"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="logs-container">
+                    <div class="log-viewer" id="logViewer">
+                        <div class="log-line">
+                            <span class="log-timestamp">2024-01-01 12:00:00</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-source">demo-app</span>
+                            <span class="log-message">Application started successfully</span>
+                        </div>
+                        <div class="log-line">
+                            <span class="log-timestamp">2024-01-01 12:00:01</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-source">prometheus</span>
+                            <span class="log-message">Metrics collection started</span>
+                        </div>
+                        <div class="log-line">
+                            <span class="log-timestamp">2024-01-01 12:00:02</span>
+                            <span class="log-level info">INFO</span>
+                            <span class="log-source">grafana</span>
+                            <span class="log-message">Dashboard provisioning completed</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/ui/dashboard.js"></script>
+</body>
+</html>

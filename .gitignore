@@ -1,0 +1,37 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Dependency directories
+bower_components/
+jspm_packages/
+
+# Build output
+dist/
+build/
+out/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+venv
+Project_2_AI_Augmented_Web_App_Using_FastAPI_+_GPT_+_SQLite_+_Pybind11_(C++)/venv
+
+# Coverage
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+
+# Misc
+*.swp
+*.swo

@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic==2.5.0
+openai
+google-generativeai
+pybind11
+python-dotenv
+aiohttp
+setuptools

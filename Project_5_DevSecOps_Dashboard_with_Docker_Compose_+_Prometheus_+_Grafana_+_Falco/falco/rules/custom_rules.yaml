@@ -1,0 +1,141 @@
+- rule: Suspicious Network Activity
+  desc: Detect suspicious network connections
+  condition: >
+    spawned_process and
+    (proc.name in (curl, wget, nc, ncat, netcat) or
+     proc.cmdline contains "curl" or
+     proc.cmdline contains "wget")
+  output: >
+    Suspicious network activity detected (user=%user.name command=%proc.cmdline
+    container=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [network, suspicious]
+  source: syscall
+
+- rule: Container Drift Detection
+  desc: Detect when a new executable is run in a container
+  condition: >
+    spawned_process and container and
+    not proc.name in (sh, bash, python, python3, node, java, nginx, httpd)
+  output: >
+    Container drift detected - new executable (user=%user.name command=%proc.cmdline
+    container=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [container, drift]
+
+- rule: Privilege Escalation Attempt
+  desc: Detect potential privilege escalation
+  condition: >
+    spawned_process and
+    (proc.name in (sudo, su, passwd, chpasswd) or
+     proc.cmdline contains "chmod +s" or
+     proc.cmdline contains "setuid")
+  output: >
+    Privilege escalation attempt detected (user=%user.name command=%proc.cmdline
+    container=%container.name)
+  priority: CRITICAL
+  tags: [privilege_escalation, security]
+
+- rule: Sensitive File Access
+  desc: Detect access to sensitive files
+  condition: >
+    open_read and
+    (fd.name startswith /etc/passwd or
+     fd.name startswith /etc/shadow or
+     fd.name startswith /etc/ssh/ or
+     fd.name startswith /root/.ssh/)
+  output: >
+    Sensitive file access detected (user=%user.name file=%fd.name
+    container=%container.name command=%proc.cmdline)
+  priority: CRITICAL
+  tags: [file_access, security]
+
+- rule: Unexpected Shell in Container
+  desc: Detect unexpected shell spawned in container
+  condition: >
+    spawned_process and container and
+    proc.name in (sh, bash, zsh, fish) and
+    not proc.pname in (sh, bash, zsh, fish, python, python3, node)
+  output: >
+    Unexpected shell spawned in container (user=%user.name shell=%proc.name
+    parent=%proc.pname container=%container.name image=%container.image.repository)
+  priority: WARNING
+  tags: [shell, container]
+
+- rule: Package Management in Container
+  desc: Detect package management tools in running container
+  condition: >
+    spawned_process and container and
+    proc.name in (apt, apt-get, yum, dnf, pip, pip3, npm, yarn)
+  output: >
+    Package management tool executed in container (user=%user.name tool=%proc.name
+    container=%container.name image=%container.image.repository command=%proc.cmdline)
+  priority: WARNING
+  tags: [package_management, container]
+
+- rule: Container Escape Attempt
+  desc: Detect potential container escape attempts
+  condition: >
+    open_read and
+    (fd.name startswith /proc/1/root or
+     fd.name startswith /host or
+     fd.name contains docker.sock)
+  output: >
+    Container escape attempt detected (user=%user.name file=%fd.name
+    container=%container.name command=%proc.cmdline)
+  priority: CRITICAL
+  tags: [container_escape, security]
+
+- rule: Crypto Mining Activity
+  desc: Detect potential cryptocurrency mining
+  condition: >
+    spawned_process and
+    (proc.name in (xmrig, minerd, cpuminer, cgminer) or
+     proc.cmdline contains "stratum" or
+     proc.cmdline contains "mining" or
+     proc.cmdline contains "cryptonight")
+  output: >
+    Crypto mining activity detected (user=%user.name command=%proc.cmdline
+    container=%container.name)
+  priority: CRITICAL
+  tags: [crypto_mining, security]
+
+- rule: Reverse Shell Activity
+  desc: Detect potential reverse shell connections
+  condition: >
+    spawned_process and
+    (proc.cmdline contains "/dev/tcp/" or
+     proc.cmdline contains "nc -e" or
+     proc.cmdline contains "ncat -e" or
+     proc.cmdline contains "bash -i" or
+     proc.cmdline contains "sh -i")
+  output: >
+    Reverse shell activity detected (user=%user.name command=%proc.cmdline
+    container=%container.name)
+  priority: CRITICAL
+  tags: [reverse_shell, security]
+
+- rule: Database Access Anomaly
+  desc: Detect unusual database access patterns
+  condition: >
+    spawned_process and
+    (proc.name in (mysql, psql, mongo, redis-cli, sqlite3) or
+     proc.cmdline contains "SELECT * FROM" or
+     proc.cmdline contains "DROP TABLE" or
+     proc.cmdline contains "DELETE FROM")
+  output: >
+    Database access anomaly detected (user=%user.name command=%proc.cmdline
+    container=%container.name)
+  priority: WARNING
+  tags: [database, security]
+
+- rule: System Information Gathering
+  desc: Detect system reconnaissance activities
+  condition: >
+    spawned_process and
+    proc.name in (whoami, id, uname, hostname, ps, netstat, ss, lsof, env)
+  output: >
+    System information gathering detected (user=%user.name command=%proc.cmdline
+    container=%container.name)
+  priority: INFO
+  tags: [reconnaissance, security]

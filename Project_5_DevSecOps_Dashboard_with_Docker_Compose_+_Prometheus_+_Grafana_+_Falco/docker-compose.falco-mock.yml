@@ -1,0 +1,136 @@
+version: '3.8'
+
+# Alternative Falco setup for WSL2 compatibility
+# This uses a mock Falco service that simulates security alerts
+
+networks:
+  monitoring:
+    driver: bridge
+  app:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  falco_data:
+    driver: local
+
+services:
+  # Microservice Application
+  demo-app:
+    build: ./app
+    container_name: demo-app
+    ports:
+      - "8000:3000"
+    networks:
+      - monitoring
+      - app
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+    volumes:
+      - ./app/logs:/app/logs
+    restart: unless-stopped
+    labels:
+      - "monitoring.type=application"
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/rules:/etc/prometheus/rules
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    labels:
+      - "monitoring.type=metrics"
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    labels:
+      - "monitoring.type=visualization"
+
+  # UI Dashboard
+  ui:
+    image: nginx:alpine
+    container_name: ui-dashboard
+    ports:
+      - "8080:80"
+    networks:
+      - monitoring
+    volumes:
+      - ./ui:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    labels:
+      - "monitoring.type=ui"
+
+  # Mock Falco service for WSL2 compatibility
+  falco-mock:
+    build: ./falco-mock
+    container_name: falco-mock
+    networks:
+      - monitoring
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./falco/rules:/etc/falco/rules.d:ro
+      - falco_data:/var/log/falco
+      - ./logs:/var/log/output
+    environment:
+      - DOCKER_API_VERSION=1.41
+      - FALCO_LOG_LEVEL=INFO
+      - MONITOR_CONTAINERS=demo-app
+    restart: unless-stopped
+    depends_on:
+      - demo-app
+    labels:
+      - "falco.mock=true"
+      - "monitoring.type=security"
+
+  # Real Falco (commented out for WSL2 compatibility)
+  # falco:
+  #   image: falcosecurity/falco:0.41.3
+  #   container_name: falco
+  #   networks:
+  #     - monitoring
+  #   privileged: true
+  #   volumes:
+  #     - /var/run/docker.sock:/host/var/run/docker.sock:ro
+  #     - /proc:/host/proc:ro
+  #     - ./falco/falco.yaml:/etc/falco/falco.yaml
+  #     - ./falco/rules:/etc/falco/rules.d
+  #     - falco_data:/var/log/falco
+  #   environment:
+  #     - FALCO_GRPC_ENABLED=false
+  #     - FALCO_K8S_AUDIT_ENABLED=false
+  #     - SKIP_DRIVER_LOADER=true
+  #   command: ["/usr/bin/falco", "-c", "/etc/falco/falco.yaml", "--userspace"]
+  #   restart: unless-stopped

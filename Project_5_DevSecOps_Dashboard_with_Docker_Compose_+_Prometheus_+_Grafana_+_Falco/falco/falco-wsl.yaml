@@ -1,0 +1,56 @@
+# Minimal Falco configuration for WSL compatibility
+rules_files:
+  - /etc/falco/falco_rules.yaml
+
+# Basic configuration
+time_format_iso_8601: true
+json_output: true
+json_include_output_property: true
+
+log_stderr: true
+log_syslog: false
+log_level: info
+priority: warning
+
+buffered_outputs: false
+
+syscall_event_drops:
+  actions:
+    - log
+  rate: 0.1
+  max_burst: 1000
+
+outputs:
+  rate: 1
+  max_burst: 1000
+
+syslog_output:
+  enabled: false
+
+file_output:
+  enabled: true
+  keep_alive: false
+  filename: /var/log/falco/falco_events.log
+
+stdout_output:
+  enabled: true
+
+webserver:
+  enabled: false
+
+grpc:
+  enabled: false
+
+grpc_output:
+  enabled: false
+
+# Disable problematic features for WSL
+syscall_event_timeouts:
+  max_consecutives: 1000
+
+# Use legacy eBPF for better compatibility
+engine:
+  kind: ebpf
+  ebpf:
+    buf_size_preset: 1
+    drop_failed_exit: false

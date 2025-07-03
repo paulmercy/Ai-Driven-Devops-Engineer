@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  # Attack simulation container (for demo purposes)
+  attack-sim:
+    build: ./attack-sim
+    container_name: attack-simulator
+    networks:
+      - project_5_devsecops_dashboard_with_docker_compose__prometheus__grafana__falco_app
+      - project_5_devsecops_dashboard_with_docker_compose__prometheus__grafana__falco_monitoring
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - TARGET_APP=demo-app:3000
+      - TARGET_REDIS=redis-demo:6379
+    restart: "no"
+
+networks:
+  project_5_devsecops_dashboard_with_docker_compose__prometheus__grafana__falco_app:
+    external: true
+  project_5_devsecops_dashboard_with_docker_compose__prometheus__grafana__falco_monitoring:
+    external: true

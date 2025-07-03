@@ -1,0 +1,170 @@
+groups:
+  - name: application_alerts
+    rules:
+      - alert: HighRequestRate
+        expr: rate(http_requests_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: demo-app
+        annotations:
+          summary: "High request rate detected"
+          description: "Request rate is {{ $value }} requests/sec for more than 2 minutes"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+          service: demo-app
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }}"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 1m
+        labels:
+          severity: warning
+          service: demo-app
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s"
+
+      - alert: ApplicationDown
+        expr: up{job="demo-app"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: demo-app
+        annotations:
+          summary: "Application is down"
+          description: "Demo application has been down for more than 30 seconds"
+
+  - name: security_alerts
+    rules:
+      - alert: SuspiciousActivityDetected
+        expr: rate(suspicious_activity_total[5m]) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "Suspicious activity rate is {{ $value }} events/sec"
+
+      - alert: SQLInjectionAttempt
+        expr: rate(suspicious_activity_total{type="sql_injection"}[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          category: security
+          attack_type: sql_injection
+        annotations:
+          summary: "SQL injection attempt detected"
+          description: "SQL injection attempts detected at {{ $value }} attempts/sec"
+
+      - alert: PrivilegeEscalationAttempt
+        expr: rate(suspicious_activity_total{type="privilege_escalation"}[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          category: security
+          attack_type: privilege_escalation
+        annotations:
+          summary: "Privilege escalation attempt detected"
+          description: "Privilege escalation attempts detected"
+
+      - alert: UnauthorizedAdminAccess
+        expr: rate(suspicious_activity_total{type="admin_access"}[5m]) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Frequent admin access detected"
+          description: "Admin endpoint accessed {{ $value }} times/sec"
+
+  - name: infrastructure_alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (memory_usage_bytes / (1024*1024*1024)) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}GB"
+
+      - alert: ContainerDown
+        expr: up{job="cadvisor"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "Container monitoring down"
+          description: "cAdvisor has been down for more than 1 minute"
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: infrastructure
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus monitoring is not available"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana dashboard is not available"
+
+  - name: container_alerts
+    rules:
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is {{ $value }}%"
+
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes / container_spec_memory_limit_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          category: container
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} is restarting frequently"
