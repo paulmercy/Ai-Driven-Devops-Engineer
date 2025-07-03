@@ -1,0 +1,123 @@
+name: AI-Driven DevOps Engineer - Main CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Which project to run (all, project2, project3, project5)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - project2
+        - project3
+        - project5
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      project2: ${{ steps.changes.outputs.project2 }}
+      project3: ${{ steps.changes.outputs.project3 }}
+      project5: ${{ steps.changes.outputs.project5 }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Detect changes
+      id: changes
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          # Manual trigger - run based on input
+          case "${{ github.event.inputs.project }}" in
+            "all")
+              echo "project2=true" >> $GITHUB_OUTPUT
+              echo "project3=true" >> $GITHUB_OUTPUT
+              echo "project5=true" >> $GITHUB_OUTPUT
+              ;;
+            "project2")
+              echo "project2=true" >> $GITHUB_OUTPUT
+              echo "project3=false" >> $GITHUB_OUTPUT
+              echo "project5=false" >> $GITHUB_OUTPUT
+              ;;
+            "project3")
+              echo "project2=false" >> $GITHUB_OUTPUT
+              echo "project3=true" >> $GITHUB_OUTPUT
+              echo "project5=false" >> $GITHUB_OUTPUT
+              ;;
+            "project5")
+              echo "project2=false" >> $GITHUB_OUTPUT
+              echo "project3=false" >> $GITHUB_OUTPUT
+              echo "project5=true" >> $GITHUB_OUTPUT
+              ;;
+          esac
+        else
+          # Auto trigger - detect changes
+          if git diff --name-only HEAD~1 HEAD | grep -q "Project_2_"; then
+            echo "project2=true" >> $GITHUB_OUTPUT
+          else
+            echo "project2=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if git diff --name-only HEAD~1 HEAD | grep -q "Project_3_"; then
+            echo "project3=true" >> $GITHUB_OUTPUT
+          else
+            echo "project3=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if git diff --name-only HEAD~1 HEAD | grep -q "Project_5_"; then
+            echo "project5=true" >> $GITHUB_OUTPUT
+          else
+            echo "project5=false" >> $GITHUB_OUTPUT
+          fi
+        fi
+
+  call-project2:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.project2 == 'true'
+    uses: ./.github/workflows/project2-ci-cd.yml
+
+  call-project3:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.project3 == 'true'
+    uses: ./.github/workflows/project3-ci-cd.yml
+
+  call-project5:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.project5 == 'true'
+    uses: ./.github/workflows/project5-ci-cd.yml
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, call-project2, call-project3, call-project5]
+    if: always()
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "## 🚀 AI-Driven DevOps Engineer CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Projects Processed:" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.detect-changes.outputs.project2 }}" == "true" ]; then
+          echo "- ✅ **Project 2**: AI Web App (FastAPI + GPT + SQLite + C++)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.detect-changes.outputs.project3 }}" == "true" ]; then
+          echo "- ✅ **Project 3**: CI/CD Workflow (GitHub Actions + Pages)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ "${{ needs.detect-changes.outputs.project5 }}" == "true" ]; then
+          echo "- ✅ **Project 5**: DevSecOps Dashboard (Docker + Prometheus + Grafana + Falco)" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- Project 2 Status: ${{ needs.call-project2.result || 'Skipped' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Project 3 Status: ${{ needs.call-project3.result || 'Skipped' }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Project 5 Status: ${{ needs.call-project5.result || 'Skipped' }}" >> $GITHUB_STEP_SUMMARY
