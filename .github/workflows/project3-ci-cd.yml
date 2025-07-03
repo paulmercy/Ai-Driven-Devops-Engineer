@@ -78,19 +78,23 @@ jobs:
         cd "Project_3_CICD_Workflow_with_GitHub_Actions_+_GitHub_Pages_Hosting/frontend"
         npm audit --audit-level moderate
         
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: './Project_3_CICD_Workflow_with_GitHub_Actions_+_GitHub_Pages_Hosting/frontend'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        
-    - name: Upload Trivy scan results
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget
+        wget -qO trivy.tar.gz https://github.com/aquasecurity-64bit.tar.gz
+        trivy /usr/local/bin
+        sudo mv trivy /usr/local/bin
+
+                                                              
+    - name: Run Trivy scan
+      run: |
+        trivy fs . --format sarif --output trivy-results.sarif
+
+    - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
       with:
-        sarif_file: 'trivy-results.sarif'
+        sarif_file: trivy-results.sarif
 
   deploy:
     runs-on: ubuntu-latest
